@@ -1253,11 +1253,12 @@ body {
 </script>
 
 <!-- SUPABASE -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script>
 const SUPABASE_URL = 'https://rcnwtfdemyvjnwajndnn.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJjbnd0ZmRlbXl2am53YWpuZG5uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1MDY4ODYsImV4cCI6MjA4OTA4Mjg4Nn0.oqyaexTnqPl4moqYqshJcLlXPh_AbCJlE8m7YzL5U5Q';
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const { createClient } = supabase;
+const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const statusClass = { active:'status-active', pending:'status-pending', paused:'status-paused' };
 const statusLabel = { active:'● Active', pending:'⏳ Pending Review', paused:'⏸ Paused' };
@@ -1266,7 +1267,7 @@ const typeIcons = { single_room:'🏠', self_contained:'🏢', '1_bedroom':'🏠
 
 async function initDashboard() {
   // Auth guard
-  const { data: { session } } = await supabase.auth.getSession();
+  const { data: { session } } = await sb.auth.getSession();
   if (!session) { window.location.href = 'rentbridge-auth.html'; return; }
 
   const user = session.user;
@@ -1283,9 +1284,9 @@ async function initDashboard() {
 
 async function loadStats(userId) {
   const [{ data: props }, { data: inquiries }, { count: unread }] = await Promise.all([
-    supabase.from('properties').select('id, status, views').eq('landlord_id', userId),
-    supabase.from('inquiries').select('id').eq('landlord_id', userId),
-    supabase.from('inquiries').select('id', { count: 'exact', head: true }).eq('landlord_id', userId).eq('is_read', false),
+    sb.from('properties').select('id, status, views').eq('landlord_id', userId),
+    sb.from('inquiries').select('id').eq('landlord_id', userId),
+    sb.from('inquiries').select('id', { count: 'exact', head: true }).eq('landlord_id', userId).eq('is_read', false),
   ]);
 
   const active = (props || []).filter(p => p.status === 'active').length;
@@ -1378,14 +1379,14 @@ async function loadMessages(userId) {
 
 async function toggleStatus(id, current) {
   const newStatus = current === 'active' ? 'paused' : 'active';
-  await supabase.from('properties').update({ status: newStatus }).eq('id', id);
+  await sb.from('properties').update({ status: newStatus }).eq('id', id);
   showToast(`Listing ${newStatus === 'active' ? 'activated ✓' : 'paused'}`);
-  const { data: { session } } = await supabase.auth.getSession();
+  const { data: { session } } = await sb.auth.getSession();
   if (session) loadProperties(session.user.id);
 }
 
 async function markRead(id) {
-  await supabase.from('inquiries').update({ is_read: true }).eq('id', id);
+  await sb.from('inquiries').update({ is_read: true }).eq('id', id);
 }
 
 function editProperty(id) {
@@ -1395,7 +1396,7 @@ function editProperty(id) {
 
 // Override add property modal submit
 async function submitProperty() {
-  const { data: { session } } = await supabase.auth.getSession();
+  const { data: { session } } = await sb.auth.getSession();
   if (!session) { showToast('Please log in first.'); return; }
 
   const title = document.querySelector('.modal-body input[type="text"]')?.value?.trim();
@@ -1412,7 +1413,7 @@ async function submitProperty() {
 
   const typeMap = { 'Single Room':'single_room','Self-Contained':'self_contained','1-Bedroom Flat':'1_bedroom','2-Bedroom Flat':'2_bedroom','Full House':'house','Student Housing':'student' };
 
-  const { error } = await supabase.from('properties').insert({
+  const { error } = await sb.from('properties').insert({
     landlord_id: session.user.id,
     title, city, area,
     type: typeMap[type] || 'self_contained',
@@ -1431,7 +1432,7 @@ async function submitProperty() {
 
 // Logout
 document.querySelector('.sidebar-bottom .nav-item').addEventListener('click', async () => {
-  await supabase.auth.signOut();
+  await sb.auth.signOut();
   window.location.href = 'rentbridge-auth.html';
 });
 

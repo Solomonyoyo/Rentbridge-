@@ -1292,11 +1292,12 @@
 </script>
 
 <!-- SUPABASE -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script>
 const SUPABASE_URL = 'https://rcnwtfdemyvjnwajndnn.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJjbnd0ZmRlbXl2am53YWpuZG5uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1MDY4ODYsImV4cCI6MjA4OTA4Mjg4Nn0.oqyaexTnqPl4moqYqshJcLlXPh_AbCJlE8m7YzL5U5Q';
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const { createClient } = supabase;
+const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const typeIcons = { single_room:'🏠', self_contained:'🏢', '1_bedroom':'🏠', '2_bedroom':'🏢', house:'🏡', student:'🎓' };
 const typeLabels = { single_room:'Single Room', self_contained:'Self-Contained', '1_bedroom':'1-Bedroom', '2_bedroom':'2-Bedroom', house:'Full House', student:'Student Housing' };
@@ -1308,7 +1309,7 @@ async function loadListings() {
   // Show skeleton
   grid.style.opacity = '0.3';
 
-  let query = supabase
+  let query = sb
     .from('properties')
     .select('*, profiles(full_name, is_verified)')
     .eq('status', 'active')

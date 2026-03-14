@@ -918,15 +918,16 @@ body {
 <div id="toast" style="position:fixed;bottom:2rem;left:50%;transform:translateX(-50%) translateY(20px);background:var(--ink);color:white;padding:0.7rem 1.6rem;border-radius:100px;font-size:0.82rem;font-weight:500;opacity:0;transition:all 0.3s;pointer-events:none;z-index:600;white-space:nowrap;"></div>
 
 <!-- SUPABASE -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script>
 // ── SUPABASE INIT ──
 const SUPABASE_URL = 'https://rcnwtfdemyvjnwajndnn.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJjbnd0ZmRlbXl2am53YWpuZG5uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1MDY4ODYsImV4cCI6MjA4OTA4Mjg4Nn0.oqyaexTnqPl4moqYqshJcLlXPh_AbCJlE8m7YzL5U5Q';
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const { createClient } = supabase;
+const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // Redirect if already logged in
-supabase.auth.getSession().then(({ data: { session } }) => {
+sb.auth.getSession().then(({ data: { session } }) => {
   if (session) {
     const role = session.user.user_metadata?.role;
     window.location.href = role === 'landlord' ? 'rentbridge-dashboard.html' : 'rentbridge-search.html';
@@ -1038,7 +1039,7 @@ async function handleLogin() {
   btn.textContent = 'Signing in…';
   btn.classList.add('loading');
 
-  const { data, error } = await supabase.auth.signInWithPassword({ email, password: pass });
+  const { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
 
   btn.textContent = 'Sign In to RentBridge';
   btn.classList.remove('loading');
@@ -1072,7 +1073,7 @@ async function handleSignup() {
   btn.textContent = 'Creating account…';
   btn.classList.add('loading');
 
-  const { data, error } = await supabase.auth.signUp({
+  const { data, error } = await sb.auth.signUp({
     email,
     password: pass,
     options: {
@@ -1114,7 +1115,7 @@ async function handleForgot() {
   const email = emailInput ? emailInput.value.trim() : '';
   if (!email) { showToast('Please enter your email address.'); return; }
 
-  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+  const { error } = await sb.auth.resetPasswordForEmail(email, {
     redirectTo: 'https://rentbridge.vercel.app/rentbridge-auth.html'
   });
 

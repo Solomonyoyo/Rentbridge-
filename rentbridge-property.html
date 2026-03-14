@@ -965,11 +965,12 @@
 </script>
 
 <!-- SUPABASE -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script>
 const SUPABASE_URL = 'https://rcnwtfdemyvjnwajndnn.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJjbnd0ZmRlbXl2am53YWpuZG5uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1MDY4ODYsImV4cCI6MjA4OTA4Mjg4Nn0.oqyaexTnqPl4moqYqshJcLlXPh_AbCJlE8m7YzL5U5Q';
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const { createClient } = supabase;
+const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const typeLabels = { single_room:'Single Room', self_contained:'Self-Contained', '1_bedroom':'1-Bedroom Flat', '2_bedroom':'2-Bedroom Flat', house:'Full House', student:'Student Housing' };
 
@@ -1025,7 +1026,7 @@ async function loadProperty() {
     <span style="color:var(--ink);font-weight:500;">${p.title}</span>`;
 
   // Increment view count
-  await supabase.from('properties').update({ views: (p.views || 0) + 1 }).eq('id', id);
+  await sb.from('properties').update({ views: (p.views || 0) + 1 }).eq('id', id);
 }
 
 // Send real inquiry
@@ -1041,12 +1042,12 @@ async function submitContact() {
 
   // Get landlord_id from current property
   if (propertyId) {
-    const { data: prop } = await supabase.from('properties').select('landlord_id').eq('id', propertyId).single();
+    const { data: prop } = await sb.from('properties').select('landlord_id').eq('id', propertyId).single();
 
-    const { data: session } = await supabase.auth.getSession();
+    const { data: session } = await sb.auth.getSession();
     const tenantId = session?.session?.user?.id || null;
 
-    await supabase.from('inquiries').insert({
+    await sb.from('inquiries').insert({
       property_id: propertyId,
       landlord_id: prop?.landlord_id,
       tenant_id: tenantId,
