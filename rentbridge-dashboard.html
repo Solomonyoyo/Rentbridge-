@@ -1,0 +1,1733 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Landlord Dashboard — RentBridge</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,700;0,900;1,300;1,700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --ink: #0d0d0d;
+  --cream: #f5f0e8;
+  --terracotta: #c8622a;
+  --terracotta-light: #e8845a;
+  --terracotta-dim: rgba(200,98,42,0.1);
+  --gold: #d4a843;
+  --gold-dim: rgba(212,168,67,0.12);
+  --sage: #4a6741;
+  --sage-dim: rgba(74,103,65,0.1);
+  --warm-white: #fdfaf4;
+  --muted: #6b6560;
+  --border: #e8e2da;
+  --card: #ffffff;
+  --sidebar-w: 248px;
+  --nav-h: 60px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: #f7f3ec;
+  color: var(--ink);
+  display: flex;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── SIDEBAR ── */
+.sidebar {
+  width: var(--sidebar-w);
+  min-width: var(--sidebar-w);
+  background: var(--ink);
+  min-height: 100vh;
+  position: fixed;
+  top: 0; left: 0;
+  display: flex;
+  flex-direction: column;
+  z-index: 100;
+  overflow-y: auto;
+}
+
+.sidebar-logo {
+  padding: 1.6rem 1.4rem 1rem;
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+}
+.logo {
+  font-family: 'Fraunces', serif;
+  font-weight: 900;
+  font-size: 1.4rem;
+  color: white;
+  text-decoration: none;
+  letter-spacing: -0.03em;
+}
+.logo span { color: var(--terracotta-light); }
+.sidebar-subtitle {
+  font-size: 0.65rem;
+  color: rgba(255,255,255,0.35);
+  margin-top: 0.15rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.sidebar-user {
+  padding: 1rem 1.4rem;
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+  margin-bottom: 0.5rem;
+}
+.user-avatar {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--terracotta), var(--gold));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.1rem; flex-shrink: 0;
+}
+.user-name { font-size: 0.85rem; font-weight: 600; color: white; }
+.user-badge {
+  display: inline-flex; align-items: center; gap: 0.25rem;
+  background: rgba(74,103,65,0.3); color: #90d880;
+  font-size: 0.58rem; font-weight: 700;
+  padding: 0.15rem 0.45rem; border-radius: 100px;
+  margin-top: 0.15rem; letter-spacing: 0.05em;
+}
+
+.sidebar-nav {
+  flex: 1;
+  padding: 0.5rem 0.8rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.nav-section-label {
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.25);
+  padding: 0.8rem 0.6rem 0.3rem;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.65rem 0.9rem;
+  border-radius: 10px;
+  text-decoration: none;
+  color: rgba(255,255,255,0.55);
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+}
+.nav-item:hover { background: rgba(255,255,255,0.06); color: white; }
+.nav-item.active { background: var(--terracotta); color: white; }
+.nav-icon { font-size: 1rem; min-width: 20px; text-align: center; }
+.nav-badge {
+  margin-left: auto;
+  background: var(--terracotta);
+  color: white;
+  font-size: 0.6rem;
+  font-weight: 700;
+  padding: 0.15rem 0.45rem;
+  border-radius: 100px;
+  min-width: 18px;
+  text-align: center;
+}
+.nav-item.active .nav-badge { background: rgba(255,255,255,0.25); }
+
+.sidebar-bottom {
+  padding: 1rem 0.8rem;
+  border-top: 1px solid rgba(255,255,255,0.07);
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+/* ── MAIN ── */
+.main {
+  margin-left: var(--sidebar-w);
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* top bar */
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 2rem;
+  height: var(--nav-h);
+  background: rgba(253,250,244,0.9);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  gap: 1rem;
+}
+
+.topbar-left {
+  display: flex;
+  flex-direction: column;
+}
+.topbar-title {
+  font-family: 'Fraunces', serif;
+  font-size: 1.1rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+.topbar-subtitle { font-size: 0.72rem; color: var(--muted); }
+
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.topbar-search {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: white;
+  border: 1.5px solid var(--border);
+  border-radius: 100px;
+  padding: 0.4rem 1rem;
+  font-size: 0.82rem;
+  color: var(--muted);
+  cursor: text;
+  transition: border-color 0.2s;
+}
+.topbar-search:focus-within { border-color: var(--terracotta); }
+.topbar-search input { border: none; outline: none; background: transparent; font-family: 'DM Sans', sans-serif; font-size: 0.82rem; color: var(--ink); width: 180px; }
+.topbar-search input::placeholder { color: #bbb; }
+
+.icon-btn {
+  width: 36px; height: 36px;
+  border-radius: 10px;
+  border: 1.5px solid var(--border);
+  background: white;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+}
+.icon-btn:hover { background: var(--cream); border-color: var(--ink); }
+.icon-btn .notif-dot {
+  position: absolute;
+  top: 4px; right: 4px;
+  width: 8px; height: 8px;
+  background: var(--terracotta);
+  border-radius: 50%;
+  border: 1.5px solid white;
+}
+
+.add-property-btn {
+  display: flex; align-items: center; gap: 0.4rem;
+  padding: 0.5rem 1.1rem;
+  background: var(--terracotta); color: white;
+  border: none; border-radius: 100px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.82rem; font-weight: 600;
+  cursor: pointer; transition: all 0.2s;
+  white-space: nowrap;
+}
+.add-property-btn:hover { background: var(--terracotta-light); transform: translateY(-1px); }
+
+/* ── CONTENT ── */
+.content {
+  padding: 1.8rem 2rem 4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.8rem;
+}
+
+/* ── STATS ROW ── */
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+  animation: fadeUp 0.5s ease both;
+}
+
+.stat-card {
+  background: var(--card);
+  border-radius: 18px;
+  padding: 1.3rem 1.4rem;
+  border: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  transition: all 0.25s;
+  cursor: default;
+}
+.stat-card:hover { transform: translateY(-3px); box-shadow: 0 12px 30px rgba(0,0,0,0.07); }
+
+.stat-card.highlight {
+  background: var(--terracotta);
+  border-color: transparent;
+  color: white;
+}
+.stat-card.highlight .stat-label { color: rgba(255,255,255,0.65); }
+.stat-card.highlight .stat-change { color: rgba(255,255,255,0.75); }
+
+.stat-top { display: flex; align-items: center; justify-content: space-between; }
+.stat-icon {
+  width: 40px; height: 40px;
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.1rem;
+}
+.stat-icon.tc { background: var(--terracotta-dim); }
+.stat-icon.gd { background: var(--gold-dim); }
+.stat-icon.sg { background: var(--sage-dim); }
+.stat-icon.wh { background: rgba(255,255,255,0.15); }
+
+.stat-change {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--sage);
+  display: flex; align-items: center; gap: 0.2rem;
+}
+.stat-change.down { color: #c04040; }
+
+.stat-label { font-size: 0.72rem; color: var(--muted); font-weight: 500; }
+.stat-value {
+  font-family: 'Fraunces', serif;
+  font-size: 1.9rem;
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  line-height: 1;
+}
+.stat-sub { font-size: 0.7rem; color: var(--muted); margin-top: 0.1rem; }
+
+/* ── GRID 2-COL ── */
+.grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  gap: 1.2rem;
+  align-items: start;
+  animation: fadeUp 0.5s 0.1s ease both;
+}
+
+/* ── PROPERTIES TABLE ── */
+.panel {
+  background: var(--card);
+  border-radius: 18px;
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.2rem 1.4rem;
+  border-bottom: 1px solid var(--border);
+}
+.panel-title {
+  font-family: 'Fraunces', serif;
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+.panel-action {
+  font-size: 0.78rem;
+  color: var(--terracotta);
+  font-weight: 600;
+  cursor: pointer;
+  background: none;
+  border: none;
+  font-family: 'DM Sans', sans-serif;
+  text-decoration: none;
+}
+
+/* property rows */
+.property-row {
+  display: grid;
+  grid-template-columns: 52px 1fr auto;
+  gap: 1rem;
+  align-items: center;
+  padding: 1rem 1.4rem;
+  border-bottom: 1px solid var(--border);
+  transition: background 0.2s;
+  cursor: pointer;
+}
+.property-row:last-child { border-bottom: none; }
+.property-row:hover { background: #faf7f2; }
+
+.prop-thumb {
+  width: 52px; height: 52px;
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.4rem;
+  flex-shrink: 0;
+}
+.pt1 { background: linear-gradient(135deg, #c4b090, #a08060); }
+.pt2 { background: linear-gradient(135deg, #90a8b4, #6080a0); }
+.pt3 { background: linear-gradient(135deg, #b4a890, #906840); }
+.pt4 { background: linear-gradient(135deg, #a4b890, #688060); }
+
+.prop-info { min-width: 0; }
+.prop-name {
+  font-weight: 600;
+  font-size: 0.88rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 0.2rem;
+}
+.prop-loc { font-size: 0.72rem; color: var(--muted); }
+.prop-meta {
+  display: flex; gap: 0.5rem; align-items: center;
+  margin-top: 0.35rem; flex-wrap: wrap;
+}
+
+.status-pill {
+  font-size: 0.62rem;
+  font-weight: 700;
+  padding: 0.18rem 0.55rem;
+  border-radius: 100px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.status-active { background: #edf7ed; color: var(--sage); }
+.status-pending { background: #fff5e0; color: #a06020; }
+.status-paused { background: #f0f0f0; color: #888; }
+
+.prop-views { font-size: 0.7rem; color: var(--muted); }
+
+.prop-right { text-align: right; min-width: 90px; }
+.prop-price {
+  font-family: 'Fraunces', serif;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--terracotta);
+  letter-spacing: -0.02em;
+}
+.prop-price sub { font-family: 'DM Sans', sans-serif; font-size: 0.62rem; color: var(--muted); font-weight: 400; vertical-align: baseline; }
+.prop-inquiries { font-size: 0.7rem; color: var(--muted); margin-top: 0.2rem; }
+.prop-actions {
+  display: flex;
+  gap: 0.3rem;
+  margin-top: 0.4rem;
+  justify-content: flex-end;
+}
+.prop-btn {
+  padding: 0.25rem 0.6rem;
+  border-radius: 6px;
+  border: 1.5px solid var(--border);
+  background: white;
+  font-size: 0.65rem;
+  font-weight: 600;
+  cursor: pointer;
+  color: var(--muted);
+  transition: all 0.2s;
+  font-family: 'DM Sans', sans-serif;
+}
+.prop-btn:hover { border-color: var(--terracotta); color: var(--terracotta); }
+.prop-btn.danger:hover { border-color: #c04040; color: #c04040; }
+
+/* ── RIGHT PANEL STACK ── */
+.right-stack { display: flex; flex-direction: column; gap: 1.2rem; }
+
+/* messages */
+.msg-list { display: flex; flex-direction: column; }
+.msg-item {
+  display: flex;
+  gap: 0.8rem;
+  padding: 0.9rem 1.4rem;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  transition: background 0.2s;
+  align-items: flex-start;
+  position: relative;
+}
+.msg-item:last-child { border-bottom: none; }
+.msg-item:hover { background: #faf7f2; }
+.msg-item.unread { background: #fffbf5; }
+.msg-unread-dot {
+  position: absolute;
+  top: 1.1rem; left: 0.6rem;
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--terracotta);
+}
+
+.msg-avatar {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #d4b896, #b8905e);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.95rem;
+  flex-shrink: 0;
+}
+.msg-body { flex: 1; min-width: 0; }
+.msg-name { font-size: 0.82rem; font-weight: 600; margin-bottom: 0.15rem; }
+.msg-preview {
+  font-size: 0.73rem;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.msg-time { font-size: 0.65rem; color: var(--muted); margin-left: auto; white-space: nowrap; padding-top: 0.1rem; }
+
+/* activity feed */
+.activity-list { display: flex; flex-direction: column; }
+.activity-item {
+  display: flex;
+  gap: 0.8rem;
+  padding: 0.8rem 1.4rem;
+  border-bottom: 1px solid var(--border);
+  align-items: flex-start;
+}
+.activity-item:last-child { border-bottom: none; }
+.activity-icon {
+  width: 32px; height: 32px;
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.85rem;
+  flex-shrink: 0;
+}
+.ai-tc { background: var(--terracotta-dim); }
+.ai-gd { background: var(--gold-dim); }
+.ai-sg { background: var(--sage-dim); }
+.ai-bk { background: #f0f0f0; }
+
+.activity-text { font-size: 0.78rem; line-height: 1.45; }
+.activity-text strong { font-weight: 600; }
+.activity-time { font-size: 0.65rem; color: var(--muted); margin-top: 0.2rem; display: block; }
+
+/* ── ANALYTICS SECTION ── */
+.analytics-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 1.2rem;
+  animation: fadeUp 0.5s 0.15s ease both;
+}
+
+/* mini chart bars */
+.chart-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.25rem;
+  height: 60px;
+  padding: 0 0.2rem;
+}
+.bar {
+  flex: 1;
+  border-radius: 4px 4px 0 0;
+  background: var(--terracotta-dim);
+  transition: background 0.2s;
+  cursor: pointer;
+  position: relative;
+}
+.bar:hover { background: var(--terracotta); }
+.bar.active { background: var(--terracotta); }
+
+.chart-labels {
+  display: flex;
+  gap: 0.25rem;
+  padding: 0.3rem 0.2rem 0;
+}
+.chart-label { flex: 1; font-size: 0.58rem; color: var(--muted); text-align: center; }
+
+.metric-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.6rem 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.8rem;
+}
+.metric-row:last-child { border-bottom: none; }
+.metric-label { color: var(--muted); }
+.metric-val { font-weight: 600; }
+.metric-bar-wrap { flex: 1; margin: 0 0.8rem; height: 5px; background: var(--border); border-radius: 100px; overflow: hidden; }
+.metric-bar { height: 100%; border-radius: 100px; background: var(--terracotta); }
+
+/* progress ring */
+.ring-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  gap: 0.4rem;
+}
+.ring {
+  width: 100px; height: 100px;
+  position: relative;
+  display: flex; align-items: center; justify-content: center;
+}
+.ring svg { position: absolute; top: 0; left: 0; transform: rotate(-90deg); }
+.ring-text { text-align: center; z-index: 1; }
+.ring-pct { font-family: 'Fraunces', serif; font-size: 1.5rem; font-weight: 900; letter-spacing: -0.04em; }
+.ring-sub { font-size: 0.6rem; color: var(--muted); }
+.ring-label { font-size: 0.72rem; color: var(--muted); text-align: center; }
+
+/* ── QUICK ACTIONS ── */
+.quick-actions {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.8rem;
+  animation: fadeUp 0.5s 0.05s ease both;
+}
+.qa-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 1.1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  transition: all 0.25s;
+  text-align: center;
+}
+.qa-card:hover { transform: translateY(-3px); box-shadow: 0 10px 28px rgba(0,0,0,0.07); border-color: var(--terracotta); }
+.qa-icon { font-size: 1.6rem; }
+.qa-label { font-size: 0.75rem; font-weight: 600; color: var(--ink); }
+.qa-desc { font-size: 0.65rem; color: var(--muted); }
+
+/* ── MODAL ── */
+.modal-overlay {
+  display: none;
+  position: fixed; inset: 0; z-index: 500;
+  background: rgba(0,0,0,0.55);
+  backdrop-filter: blur(4px);
+  align-items: center;
+  justify-content: center;
+}
+.modal-overlay.open { display: flex; }
+.modal {
+  background: white;
+  border-radius: 24px;
+  width: 560px;
+  max-width: 95vw;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 30px 80px rgba(0,0,0,0.2);
+  animation: fadeUp 0.3s ease;
+}
+.modal-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 1.4rem 1.6rem;
+  border-bottom: 1px solid var(--border);
+}
+.modal-title { font-family: 'Fraunces', serif; font-size: 1.2rem; font-weight: 700; }
+.modal-close { background: none; border: none; font-size: 1.4rem; cursor: pointer; color: var(--muted); transition: color 0.2s; }
+.modal-close:hover { color: var(--ink); }
+.modal-body { padding: 1.6rem; display: flex; flex-direction: column; gap: 1rem; }
+.modal-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+.form-field { display: flex; flex-direction: column; gap: 0.3rem; }
+.form-field label { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.form-field input, .form-field select, .form-field textarea {
+  border: 1.5px solid var(--border); border-radius: 10px;
+  padding: 0.65rem 0.9rem;
+  font-family: 'DM Sans', sans-serif; font-size: 0.85rem; color: var(--ink);
+  background: var(--warm-white); outline: none; transition: border-color 0.2s; resize: none;
+}
+.form-field input:focus, .form-field select:focus, .form-field textarea:focus { border-color: var(--terracotta); }
+.modal-footer { padding: 1.2rem 1.6rem; border-top: 1px solid var(--border); display: flex; gap: 0.7rem; justify-content: flex-end; }
+.btn-cancel { padding: 0.7rem 1.4rem; border: 1.5px solid var(--border); border-radius: 100px; background: white; color: var(--muted); font-family: 'DM Sans', sans-serif; font-size: 0.85rem; font-weight: 500; cursor: pointer; transition: all 0.2s; }
+.btn-cancel:hover { border-color: var(--ink); color: var(--ink); }
+.btn-save { padding: 0.7rem 1.8rem; border: none; border-radius: 100px; background: var(--terracotta); color: white; font-family: 'Fraunces', serif; font-size: 0.95rem; font-weight: 700; cursor: pointer; transition: all 0.2s; }
+.btn-save:hover { background: var(--terracotta-light); transform: translateY(-1px); }
+
+/* ── TOAST ── */
+.toast {
+  position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%) translateY(20px);
+  background: var(--ink); color: white;
+  padding: 0.7rem 1.6rem; border-radius: 100px;
+  font-size: 0.82rem; font-weight: 500;
+  opacity: 0; transition: all 0.3s; pointer-events: none; z-index: 600;
+  white-space: nowrap;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ── HAMBURGER ── */
+.hamburger {
+  display: none;
+  width: 38px; height: 38px;
+  border-radius: 10px;
+  border: 1.5px solid var(--border);
+  background: white;
+  align-items: center; justify-content: center;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+.hamburger:hover { background: var(--cream); }
+
+/* ── MOBILE OVERLAY ── */
+.sidebar-overlay {
+  display: none;
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 99;
+  backdrop-filter: blur(2px);
+}
+.sidebar-overlay.open { display: block; }
+
+/* ── ANIMATIONS ── */
+@keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 1100px) { .analytics-row { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 960px) {
+  .sidebar { transform: translateX(-100%); transition: transform 0.3s; z-index: 200; }
+  .sidebar.open { transform: translateX(0); box-shadow: 4px 0 30px rgba(0,0,0,0.3); }
+  .main { margin-left: 0; }
+  .stats-row { grid-template-columns: 1fr 1fr; }
+  .grid-2 { grid-template-columns: 1fr; }
+  .analytics-row { grid-template-columns: 1fr; }
+  .quick-actions { grid-template-columns: repeat(2, 1fr); }
+  .hamburger { display: flex; }
+  #sidebarClose { display: block !important; }
+}
+@media (max-width: 600px) {
+  .content { padding: 1rem; }
+  .stats-row { grid-template-columns: 1fr 1fr; }
+  .topbar { padding: 0 1rem; }
+  .topbar-search { display: none; }
+}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-logo" style="display:flex;align-items:center;justify-content:space-between;">
+    <a class="logo" href="rentbridge.html">Rent<span>Bridge</span></a>
+    <button onclick="closeSidebar()" style="display:none;background:none;border:none;color:rgba(255,255,255,0.5);font-size:1.4rem;cursor:pointer;padding:0.2rem 0.4rem;border-radius:6px;" id="sidebarClose">✕</button>
+    <div class="sidebar-subtitle" style="display:none">Landlord Portal</div>
+  </div>
+  <div style="padding:0 1.4rem 0.5rem;font-size:0.65rem;color:rgba(255,255,255,0.35);letter-spacing:0.05em;text-transform:uppercase;">Landlord Portal</div>
+
+  <div class="sidebar-user">
+    <div class="user-avatar">👨🏿</div>
+    <div>
+      <div class="user-name">Chukwuemeka Obi</div>
+      <div class="user-badge">✓ Verified Landlord</div>
+    </div>
+  </div>
+
+  <nav class="sidebar-nav">
+    <div class="nav-section-label">Main</div>
+    <button class="nav-item active" onclick="switchPage('dashboard', this)">
+      <span class="nav-icon">⊞</span> Dashboard
+    </button>
+    <button class="nav-item" onclick="switchPage('properties', this)">
+      <span class="nav-icon">🏠</span> My Properties
+      <span class="nav-badge">4</span>
+    </button>
+    <button class="nav-item" onclick="switchPage('messages', this)">
+      <span class="nav-icon">💬</span> Messages
+      <span class="nav-badge">7</span>
+    </button>
+    <button class="nav-item" onclick="switchPage('analytics', this)">
+      <span class="nav-icon">📊</span> Analytics
+    </button>
+
+    <div class="nav-section-label">Manage</div>
+    <button class="nav-item" onclick="switchPage('tenants', this)">
+      <span class="nav-icon">👥</span> Tenants
+    </button>
+    <button class="nav-item" onclick="switchPage('payments', this)">
+      <span class="nav-icon">💰</span> Payments
+    </button>
+    <button class="nav-item" onclick="openModal()">
+      <span class="nav-icon">➕</span> Add Property
+    </button>
+
+    <div class="nav-section-label">Account</div>
+    <button class="nav-item" onclick="switchPage('profile', this)">
+      <span class="nav-icon">👤</span> Profile
+    </button>
+    <button class="nav-item" onclick="switchPage('settings', this)">
+      <span class="nav-icon">⚙️</span> Settings
+    </button>
+  </nav>
+
+  <div class="sidebar-bottom">
+    <button class="nav-item" onclick="handleLogout()">
+      <span class="nav-icon">🚪</span> Log Out
+    </button>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<!-- MOBILE SIDEBAR OVERLAY -->
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+<div class="main">
+
+  <!-- TOPBAR -->
+  <header class="topbar">
+    <div style="display:flex;align-items:center;gap:0.8rem;">
+      <button class="hamburger" onclick="toggleSidebar()">☰</button>
+      <div class="topbar-left">
+        <div class="topbar-title" id="pageTitle">Dashboard</div>
+        <div class="topbar-subtitle">Good morning, Chukwuemeka 👋</div>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <div class="topbar-search">
+        <span>🔍</span>
+        <input type="text" placeholder="Search properties, messages…" />
+      </div>
+      <button class="icon-btn" onclick="showToast('No new updates')">🔔<span class="notif-dot"></span></button>
+      <button class="icon-btn" onclick="showToast('Help centre coming soon')">❓</button>
+      <button class="add-property-btn" onclick="openModal()">+ Add Property</button>
+    </div>
+  </header>
+
+  <!-- CONTENT -->
+  <main class="content" id="mainContent">
+
+    <!-- STATS -->
+    <div class="stats-row">
+      <div class="stat-card highlight">
+        <div class="stat-top">
+          <div class="stat-icon wh">🏠</div>
+          <div class="stat-change">↑ +1 this month</div>
+        </div>
+        <div>
+          <div class="stat-label">Active Listings</div>
+          <div class="stat-value">4</div>
+          <div class="stat-sub" style="color:rgba(255,255,255,0.5)">3 verified · 1 pending</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-top">
+          <div class="stat-icon tc">💬</div>
+          <div class="stat-change">↑ +12 this week</div>
+        </div>
+        <div>
+          <div class="stat-label">Total Inquiries</div>
+          <div class="stat-value">47</div>
+          <div class="stat-sub">7 unread messages</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-top">
+          <div class="stat-icon gd">👁</div>
+          <div class="stat-change">↑ +340 this week</div>
+        </div>
+        <div>
+          <div class="stat-label">Total Views</div>
+          <div class="stat-value">1,284</div>
+          <div class="stat-sub">Across all listings</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-top">
+          <div class="stat-icon sg">🏷️</div>
+          <div class="stat-change down">↓ 1 expiring soon</div>
+        </div>
+        <div>
+          <div class="stat-label">Active Tenants</div>
+          <div class="stat-value">2</div>
+          <div class="stat-sub">₦570,000 / month income</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- QUICK ACTIONS -->
+    <div class="quick-actions">
+      <div class="qa-card" onclick="openModal()">
+        <div class="qa-icon">➕</div>
+        <div class="qa-label">Add Property</div>
+        <div class="qa-desc">List a new rental</div>
+      </div>
+      <div class="qa-card" onclick="showToast('Opening message centre…')">
+        <div class="qa-icon">💬</div>
+        <div class="qa-label">Reply Messages</div>
+        <div class="qa-desc">7 unread</div>
+      </div>
+      <div class="qa-card" onclick="showToast('Verification complete ✓')">
+        <div class="qa-icon">✅</div>
+        <div class="qa-label">Get Verified</div>
+        <div class="qa-desc">Boost listing visibility</div>
+      </div>
+      <div class="qa-card" onclick="showToast('Generating report…')">
+        <div class="qa-icon">📋</div>
+        <div class="qa-label">Download Report</div>
+        <div class="qa-desc">Monthly summary</div>
+      </div>
+    </div>
+
+    <!-- PROPERTIES + RIGHT PANELS -->
+    <div class="grid-2">
+
+      <!-- PROPERTIES LIST -->
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">My Properties</div>
+          <button class="panel-action" onclick="showToast('Loading all properties…')">View all →</button>
+        </div>
+
+        <!-- Row 1 -->
+        <div class="property-row" onclick="showToast('Opening property details…')">
+          <div class="prop-thumb pt1">🏢</div>
+          <div class="prop-info">
+            <div class="prop-name">2-Bed Flat, Victoria Island</div>
+            <div class="prop-loc">📍 Adeola Odeku Street, VI</div>
+            <div class="prop-meta">
+              <span class="status-pill status-active">● Active</span>
+              <span class="prop-views">👁 342 views</span>
+            </div>
+          </div>
+          <div class="prop-right">
+            <div class="prop-price">₦350,000 <sub>/mo</sub></div>
+            <div class="prop-inquiries">14 inquiries</div>
+            <div class="prop-actions">
+              <button class="prop-btn" onclick="event.stopPropagation();showToast('Opening editor…')">Edit</button>
+              <button class="prop-btn" onclick="event.stopPropagation();showToast('Listing paused')">Pause</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Row 2 -->
+        <div class="property-row" onclick="showToast('Opening property details…')">
+          <div class="prop-thumb pt2">🏠</div>
+          <div class="prop-info">
+            <div class="prop-name">Self-Contained, Lekki Ph. 1</div>
+            <div class="prop-loc">📍 Admiralty Way, Lekki</div>
+            <div class="prop-meta">
+              <span class="status-pill status-active">● Active</span>
+              <span class="prop-views">👁 218 views</span>
+            </div>
+          </div>
+          <div class="prop-right">
+            <div class="prop-price">₦85,000 <sub>/mo</sub></div>
+            <div class="prop-inquiries">9 inquiries</div>
+            <div class="prop-actions">
+              <button class="prop-btn" onclick="event.stopPropagation();showToast('Opening editor…')">Edit</button>
+              <button class="prop-btn" onclick="event.stopPropagation();showToast('Listing paused')">Pause</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Row 3 -->
+        <div class="property-row" onclick="showToast('Opening property details…')">
+          <div class="prop-thumb pt3">🏡</div>
+          <div class="prop-info">
+            <div class="prop-name">3-Bed Bungalow, Magodo</div>
+            <div class="prop-loc">📍 Magodo Phase 2, Lagos</div>
+            <div class="prop-meta">
+              <span class="status-pill status-pending">⏳ Pending Review</span>
+              <span class="prop-views">👁 54 views</span>
+            </div>
+          </div>
+          <div class="prop-right">
+            <div class="prop-price">₦280,000 <sub>/mo</sub></div>
+            <div class="prop-inquiries">3 inquiries</div>
+            <div class="prop-actions">
+              <button class="prop-btn" onclick="event.stopPropagation();showToast('Opening editor…')">Edit</button>
+              <button class="prop-btn danger" onclick="event.stopPropagation();showToast('Are you sure? Listing deleted.')">Delete</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Row 4 -->
+        <div class="property-row" onclick="showToast('Opening property details…')">
+          <div class="prop-thumb pt4">🏢</div>
+          <div class="prop-info">
+            <div class="prop-name">1-Bed Flat, Yaba</div>
+            <div class="prop-loc">📍 Herbert Macaulay Way, Yaba</div>
+            <div class="prop-meta">
+              <span class="status-pill status-paused">⏸ Paused</span>
+              <span class="prop-views">👁 670 views</span>
+            </div>
+          </div>
+          <div class="prop-right">
+            <div class="prop-price">₦95,000 <sub>/mo</sub></div>
+            <div class="prop-inquiries">21 inquiries</div>
+            <div class="prop-actions">
+              <button class="prop-btn" onclick="event.stopPropagation();showToast('Listing reactivated ✓')">Activate</button>
+              <button class="prop-btn" onclick="event.stopPropagation();showToast('Opening editor…')">Edit</button>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- end properties panel -->
+
+      <!-- RIGHT STACK -->
+      <div class="right-stack">
+
+        <!-- Recent Messages -->
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title">Recent Messages</div>
+            <button class="panel-action" onclick="showToast('Opening message centre…')">View all →</button>
+          </div>
+          <div class="msg-list">
+            <div class="msg-item unread" onclick="showToast('Opening message…')">
+              <div class="msg-unread-dot"></div>
+              <div class="msg-avatar">👩🏾</div>
+              <div class="msg-body">
+                <div class="msg-name">Adaeze Nwosu</div>
+                <div class="msg-preview">Hi, is the VI apartment still available?</div>
+              </div>
+              <div class="msg-time">2m ago</div>
+            </div>
+            <div class="msg-item unread" onclick="showToast('Opening message…')">
+              <div class="msg-unread-dot"></div>
+              <div class="msg-avatar">👨🏿‍💼</div>
+              <div class="msg-body">
+                <div class="msg-name">Emeka Bello</div>
+                <div class="msg-preview">Can I schedule a viewing this weekend?</div>
+              </div>
+              <div class="msg-time">18m ago</div>
+            </div>
+            <div class="msg-item" onclick="showToast('Opening message…')">
+              <div class="msg-avatar">👩🏽</div>
+              <div class="msg-body">
+                <div class="msg-name">Fatima Abdullahi</div>
+                <div class="msg-preview">Is the price negotiable for 12 months?</div>
+              </div>
+              <div class="msg-time">1h ago</div>
+            </div>
+            <div class="msg-item" onclick="showToast('Opening message…')">
+              <div class="msg-avatar">👨🏾</div>
+              <div class="msg-body">
+                <div class="msg-name">Tunde Adeyemi</div>
+                <div class="msg-preview">Thank you for the tour yesterday!</div>
+              </div>
+              <div class="msg-time">3h ago</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Activity Feed -->
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title">Recent Activity</div>
+          </div>
+          <div class="activity-list">
+            <div class="activity-item">
+              <div class="activity-icon ai-tc">💬</div>
+              <div class="activity-text">
+                <strong>New inquiry</strong> on 2-Bed, Victoria Island<br>from Adaeze Nwosu
+                <span class="activity-time">2 minutes ago</span>
+              </div>
+            </div>
+            <div class="activity-item">
+              <div class="activity-icon ai-sg">👁</div>
+              <div class="activity-text">
+                Your <strong>Lekki listing</strong> was viewed 12 times today
+                <span class="activity-time">1 hour ago</span>
+              </div>
+            </div>
+            <div class="activity-item">
+              <div class="activity-icon ai-gd">⭐</div>
+              <div class="activity-text">
+                <strong>VI apartment</strong> was saved by 3 tenants
+                <span class="activity-time">Today, 9:41 AM</span>
+              </div>
+            </div>
+            <div class="activity-item">
+              <div class="activity-icon ai-bk">📋</div>
+              <div class="activity-text">
+                <strong>Magodo bungalow</strong> submitted for review
+                <span class="activity-time">Yesterday, 4:15 PM</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- end right stack -->
+    </div><!-- end grid-2 -->
+
+    <!-- ANALYTICS ROW -->
+    <div class="analytics-row">
+
+      <!-- Views chart -->
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">Listing Views</div>
+          <span style="font-size:0.72rem;color:var(--muted)">Last 7 days</span>
+        </div>
+        <div style="padding:1rem 1.4rem 1.4rem">
+          <div style="font-family:'Fraunces',serif;font-size:1.6rem;font-weight:900;letter-spacing:-0.03em;margin-bottom:0.2rem">1,284 <span style="font-size:0.8rem;font-family:'DM Sans',sans-serif;color:var(--sage);font-weight:600">↑ +26%</span></div>
+          <div style="font-size:0.72rem;color:var(--muted);margin-bottom:1rem">Total views this week</div>
+          <div class="chart-bars">
+            <div class="bar" style="height:40%"></div>
+            <div class="bar" style="height:55%"></div>
+            <div class="bar" style="height:35%"></div>
+            <div class="bar" style="height:70%"></div>
+            <div class="bar" style="height:60%"></div>
+            <div class="bar" style="height:85%"></div>
+            <div class="bar active" style="height:100%"></div>
+          </div>
+          <div class="chart-labels">
+            <div class="chart-label">Mon</div>
+            <div class="chart-label">Tue</div>
+            <div class="chart-label">Wed</div>
+            <div class="chart-label">Thu</div>
+            <div class="chart-label">Fri</div>
+            <div class="chart-label">Sat</div>
+            <div class="chart-label">Sun</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Performance breakdown -->
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">Property Performance</div>
+          <span style="font-size:0.72rem;color:var(--muted)">By inquiries</span>
+        </div>
+        <div style="padding:0.8rem 1.4rem 1.4rem">
+          <div class="metric-row">
+            <span class="metric-label">VI Apartment</span>
+            <div class="metric-bar-wrap"><div class="metric-bar" style="width:67%"></div></div>
+            <span class="metric-val">14</span>
+          </div>
+          <div class="metric-row">
+            <span class="metric-label">Yaba 1-Bed</span>
+            <div class="metric-bar-wrap"><div class="metric-bar" style="width:100%"></div></div>
+            <span class="metric-val">21</span>
+          </div>
+          <div class="metric-row">
+            <span class="metric-label">Lekki S/C</span>
+            <div class="metric-bar-wrap"><div class="metric-bar" style="width:43%"></div></div>
+            <span class="metric-val">9</span>
+          </div>
+          <div class="metric-row">
+            <span class="metric-label">Magodo</span>
+            <div class="metric-bar-wrap"><div class="metric-bar" style="width:14%"></div></div>
+            <span class="metric-val">3</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Profile completion -->
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">Profile Score</div>
+          <button class="panel-action" onclick="showToast('Opening profile settings…')">Improve →</button>
+        </div>
+        <div class="ring-wrap">
+          <div class="ring">
+            <svg width="100" height="100" viewBox="0 0 100 100">
+              <circle cx="50" cy="50" r="40" fill="none" stroke="#e8e2da" stroke-width="8"/>
+              <circle cx="50" cy="50" r="40" fill="none" stroke="#c8622a" stroke-width="8"
+                stroke-dasharray="251.2" stroke-dashoffset="62.8" stroke-linecap="round"/>
+            </svg>
+            <div class="ring-text">
+              <div class="ring-pct">75%</div>
+              <div class="ring-sub">complete</div>
+            </div>
+          </div>
+          <div class="ring-label">Complete your profile to get<br>more tenant inquiries</div>
+          <div style="display:flex;flex-direction:column;gap:0.4rem;width:100%;padding:0 0.5rem">
+            <div style="display:flex;justify-content:space-between;font-size:0.72rem;"><span>✅ ID Verified</span><span style="color:var(--sage);font-weight:600">Done</span></div>
+            <div style="display:flex;justify-content:space-between;font-size:0.72rem;"><span>✅ Phone Verified</span><span style="color:var(--sage);font-weight:600">Done</span></div>
+            <div style="display:flex;justify-content:space-between;font-size:0.72rem;"><span>⬜ Add Profile Photo</span><span style="color:var(--terracotta);font-weight:600;cursor:pointer" onclick="showToast('Uploading photo…')">Add →</span></div>
+            <div style="display:flex;justify-content:space-between;font-size:0.72rem;"><span>⬜ Bank Details</span><span style="color:var(--terracotta);font-weight:600;cursor:pointer" onclick="showToast('Opening bank details…')">Add →</span></div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- end analytics row -->
+
+  </main>
+</div>
+
+<!-- ADD PROPERTY MODAL -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModalOutside(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Add New Property</div>
+      <button class="modal-close" onclick="closeModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-row">
+        <div class="form-field">
+          <label>Property Title</label>
+          <input type="text" placeholder="e.g. 2-Bedroom Flat, Lekki" />
+        </div>
+        <div class="form-field">
+          <label>Property Type</label>
+          <select>
+            <option>Single Room</option>
+            <option>Self-Contained</option>
+            <option selected>1-Bedroom Flat</option>
+            <option>2-Bedroom Flat</option>
+            <option>Full House</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-row">
+        <div class="form-field">
+          <label>City</label>
+          <select>
+            <option>Lagos</option>
+            <option>Abuja</option>
+            <option>Port Harcourt</option>
+            <option>Ibadan</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <label>Area / Street</label>
+          <input type="text" placeholder="e.g. Admiralty Way, Lekki" />
+        </div>
+      </div>
+      <div class="modal-row">
+        <div class="form-field">
+          <label>Monthly Rent (₦)</label>
+          <input type="number" placeholder="e.g. 150000" />
+        </div>
+        <div class="form-field">
+          <label>Caution Deposit (₦)</label>
+          <input type="number" placeholder="e.g. 150000" />
+        </div>
+      </div>
+      <div class="form-field">
+        <label>Description</label>
+        <textarea rows="3" placeholder="Describe the property, key features, nearby landmarks…"></textarea>
+      </div>
+      <div class="modal-row">
+        <div class="form-field">
+          <label>Bedrooms</label>
+          <select><option>Studio</option><option>1</option><option selected>2</option><option>3</option><option>4+</option></select>
+        </div>
+        <div class="form-field">
+          <label>Bathrooms</label>
+          <select><option>1</option><option selected>2</option><option>3</option></select>
+        </div>
+      </div>
+      <div class="form-field">
+        <label>Availability</label>
+        <select>
+          <option>Immediately</option>
+          <option>Within 2 weeks</option>
+          <option>Within a month</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+      <button class="btn-save" onclick="submitProperty()">Publish Listing →</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+  // page switching
+  function switchPage(page, btn) {
+    document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+    btn.classList.add('active');
+    if (window.innerWidth <= 960) closeSidebar();
+    const titles = { dashboard:'Dashboard', properties:'My Properties', messages:'Messages', analytics:'Analytics', tenants:'Tenants', payments:'Payments', profile:'My Profile', settings:'Settings' };
+    document.getElementById('pageTitle').textContent = titles[page] || page;
+    const content = document.getElementById('mainContent');
+
+    if (page === 'dashboard') { location.reload(); return; }
+
+    if (page === 'properties') {
+      content.innerHTML = `
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.2rem;">
+          <div><div style="font-family:'Fraunces',serif;font-size:1.4rem;font-weight:900;letter-spacing:-0.03em;">My Properties</div><div style="font-size:0.78rem;color:var(--muted);margin-top:0.2rem;">Manage all your listings</div></div>
+          <button class="add-property-btn" onclick="openModal()">+ Add Property</button>
+        </div>
+        <div class="panel" id="propertiesPanel"><div class="panel-header"><div class="panel-title">All Listings</div></div><div style="padding:2rem;text-align:center;color:var(--muted);font-size:0.85rem;">Loading your properties…</div></div>`;
+      supabase_loadPropertiesPage();
+      return;
+    }
+
+    if (page === 'messages') {
+      content.innerHTML = `
+        <div style="margin-bottom:1.2rem;"><div style="font-family:'Fraunces',serif;font-size:1.4rem;font-weight:900;letter-spacing:-0.03em;">Messages</div><div style="font-size:0.78rem;color:var(--muted);margin-top:0.2rem;">Tenant inquiries on your listings</div></div>
+        <div class="panel" id="messagesPanel"><div class="panel-header"><div class="panel-title">All Inquiries</div></div><div style="padding:2rem;text-align:center;color:var(--muted);font-size:0.85rem;">Loading messages…</div></div>`;
+      supabase_loadMessagesPage();
+      return;
+    }
+
+    if (page === 'analytics') {
+      content.innerHTML = `
+        <div style="margin-bottom:1.2rem;"><div style="font-family:'Fraunces',serif;font-size:1.4rem;font-weight:900;letter-spacing:-0.03em;">Analytics</div><div style="font-size:0.78rem;color:var(--muted);margin-top:0.2rem;">How your listings are performing</div></div>
+        <div class="stats-row" id="analyticsStats"><div style="padding:2rem;color:var(--muted);font-size:0.85rem;">Loading…</div></div>`;
+      supabase_loadAnalytics();
+      return;
+    }
+
+    if (page === 'tenants') {
+      content.innerHTML = `
+        <div style="margin-bottom:1.2rem;"><div style="font-family:'Fraunces',serif;font-size:1.4rem;font-weight:900;letter-spacing:-0.03em;">Tenants</div><div style="font-size:0.78rem;color:var(--muted);margin-top:0.2rem;">People who have inquired about your properties</div></div>
+        <div class="panel" id="tenantsPanel"><div class="panel-header"><div class="panel-title">All Tenant Inquiries</div></div><div style="padding:2rem;text-align:center;color:var(--muted);font-size:0.85rem;">Loading tenants…</div></div>`;
+      supabase_loadTenants();
+      return;
+    }
+
+    if (page === 'payments') {
+      content.innerHTML = `
+        <div style="margin-bottom:1.2rem;"><div style="font-family:'Fraunces',serif;font-size:1.4rem;font-weight:900;letter-spacing:-0.03em;">Payments</div></div>
+        <div class="panel"><div class="panel-header"><div class="panel-title">Payment History</div></div>
+        <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:4rem 2rem;text-align:center;gap:1rem;">
+          <div style="font-size:3rem">💰</div>
+          <div style="font-family:'Fraunces',serif;font-size:1.3rem;font-weight:700;">Payments Coming Soon</div>
+          <div style="font-size:0.85rem;color:var(--muted);max-width:320px;line-height:1.6;">Paystack integration for featured listings and premium plans is on the way.</div>
+        </div></div>`;
+      return;
+    }
+
+    if (page === 'profile') {
+      content.innerHTML = `
+        <div style="margin-bottom:1.2rem;"><div style="font-family:'Fraunces',serif;font-size:1.4rem;font-weight:900;letter-spacing:-0.03em;">My Profile</div></div>
+        <div class="panel" id="profilePanel"><div style="padding:2rem;text-align:center;color:var(--muted);font-size:0.85rem;">Loading profile…</div></div>`;
+      supabase_loadProfile();
+      return;
+    }
+
+    if (page === 'settings') {
+      content.innerHTML = `
+        <div style="margin-bottom:1.2rem;"><div style="font-family:'Fraunces',serif;font-size:1.4rem;font-weight:900;letter-spacing:-0.03em;">Settings</div></div>
+        <div class="panel">
+          <div class="panel-header"><div class="panel-title">Account Settings</div></div>
+          <div style="padding:1.5rem;display:flex;flex-direction:column;gap:1.2rem;">
+            <div class="form-field"><label style="font-size:0.68rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:0.3rem;">New Password</label><input type="password" placeholder="Enter new password" style="width:100%;border:1.5px solid var(--border);border-radius:10px;padding:0.65rem 0.9rem;font-family:'DM Sans',sans-serif;font-size:0.85rem;outline:none;" /></div>
+            <div class="form-field"><label style="font-size:0.68rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:0.3rem;">Confirm Password</label><input type="password" placeholder="Confirm new password" style="width:100%;border:1.5px solid var(--border);border-radius:10px;padding:0.65rem 0.9rem;font-family:'DM Sans',sans-serif;font-size:0.85rem;outline:none;" /></div>
+            <button onclick="showToast('Password updated ✅')" style="padding:0.8rem 2rem;background:var(--terracotta);color:white;border:none;border-radius:100px;font-family:'Fraunces',serif;font-size:0.95rem;font-weight:700;cursor:pointer;width:fit-content;">Save Changes</button>
+            <div style="height:1px;background:var(--border);"></div>
+            <div style="font-size:0.85rem;font-weight:600;color:#c04040;cursor:pointer;" onclick="if(confirm('Delete your account?')) showToast('Contact support to delete account.')">⚠️ Delete Account</div>
+          </div>
+        </div>`;
+      return;
+    }
+  }
+
+  // ── PAGE LOADERS ──
+  async function supabase_loadPropertiesPage() {
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) return;
+    const { data: props } = await sb.from('properties').select('*').eq('landlord_id', session.user.id).order('created_at', { ascending: false });
+    const panel = document.getElementById('propertiesPanel');
+    if (!props || props.length === 0) {
+      panel.innerHTML += '<div style="padding:3rem;text-align:center;color:var(--muted);">No properties yet. <a href="#" onclick="openModal()" style="color:var(--terracotta);font-weight:600;">Add your first one →</a></div>';
+      return;
+    }
+    const rows = props.map((p, i) => `
+      <div class="property-row">
+        <div class="prop-thumb ${['pt1','pt2','pt3','pt4'][i%4]}">${{single_room:'🏠',self_contained:'🏢','1_bedroom':'🏠','2_bedroom':'🏢',house:'🏡',student:'🎓'}[p.type]||'🏠'}</div>
+        <div class="prop-info">
+          <div class="prop-name">${p.title}</div>
+          <div class="prop-loc">📍 ${p.area?p.area+', ':''}${p.city}</div>
+          <div class="prop-meta"><span class="status-pill ${{active:'status-active',pending:'status-pending',paused:'status-paused'}[p.status]||'status-pending'}">${{active:'● Active',pending:'⏳ Pending',paused:'⏸ Paused'}[p.status]||p.status}</span><span class="prop-views">👁 ${p.views||0} views</span></div>
+        </div>
+        <div class="prop-right">
+          <div class="prop-price">₦${Number(p.price).toLocaleString()} <sub>/mo</sub></div>
+          <div class="prop-actions">
+            <button class="prop-btn" onclick="toggleStatus('${p.id}','${p.status}')">${p.status==='active'?'Pause':'Activate'}</button>
+            <button class="prop-btn danger" onclick="deleteProperty('${p.id}')">Delete</button>
+          </div>
+        </div>
+      </div>`).join('');
+    panel.innerHTML = `<div class="panel-header"><div class="panel-title">All Listings (${props.length})</div><button class="panel-action" onclick="openModal()">+ Add New</button></div>${rows}`;
+  }
+
+  async function supabase_loadMessagesPage() {
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) return;
+    const { data: msgs } = await sb.from('inquiries').select('*, properties(title)').eq('landlord_id', session.user.id).order('created_at', { ascending: false });
+    const panel = document.getElementById('messagesPanel');
+    if (!msgs || msgs.length === 0) {
+      panel.innerHTML = '<div class="panel-header"><div class="panel-title">All Inquiries</div></div><div style="padding:3rem;text-align:center;color:var(--muted);">No messages yet. When tenants contact you, they appear here.</div>';
+      return;
+    }
+    const rows = msgs.map(m => `
+      <div class="msg-item ${!m.is_read?'unread':''}" onclick="markRead('${m.id}');this.classList.remove('unread')" style="border-bottom:1px solid var(--border);padding:1rem 1.4rem;display:flex;gap:0.8rem;cursor:pointer;align-items:flex-start;">
+        ${!m.is_read?'<div class="msg-unread-dot"></div>':''}
+        <div class="msg-avatar">👤</div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-weight:600;font-size:0.85rem;margin-bottom:0.15rem;">${m.tenant_name||'Anonymous'} ${m.tenant_phone?'· '+m.tenant_phone:''}</div>
+          <div style="font-size:0.8rem;color:var(--muted);margin-bottom:0.2rem;">${m.message}</div>
+          <div style="font-size:0.68rem;color:var(--terracotta);">Re: ${m.properties?.title||'Property'}</div>
+          ${m.viewing_date?`<div style="font-size:0.68rem;color:var(--sage);margin-top:0.2rem;">📅 Viewing: ${m.viewing_date}</div>`:''}
+        </div>
+        <div style="font-size:0.65rem;color:var(--muted);white-space:nowrap;">${timeSince(m.created_at)}</div>
+      </div>`).join('');
+    panel.innerHTML = `<div class="panel-header"><div class="panel-title">All Inquiries (${msgs.length})</div></div>${rows}`;
+    // Mark all as read
+    await sb.from('inquiries').update({ is_read: true }).eq('landlord_id', session.user.id).eq('is_read', false);
+  }
+
+  async function supabase_loadAnalytics() {
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) return;
+    const { data: props } = await sb.from('properties').select('id,title,views,status').eq('landlord_id', session.user.id);
+    const { data: msgs } = await sb.from('inquiries').select('id').eq('landlord_id', session.user.id);
+    const totalViews = (props||[]).reduce((s,p)=>s+(p.views||0),0);
+    const active = (props||[]).filter(p=>p.status==='active').length;
+    document.getElementById('analyticsStats').innerHTML = `
+      <div class="stat-card highlight"><div class="stat-top"><div class="stat-icon wh">👁</div></div><div><div class="stat-label">Total Views</div><div class="stat-value">${totalViews.toLocaleString()}</div></div></div>
+      <div class="stat-card"><div class="stat-top"><div class="stat-icon tc">💬</div></div><div><div class="stat-label">Total Inquiries</div><div class="stat-value">${(msgs||[]).length}</div></div></div>
+      <div class="stat-card"><div class="stat-top"><div class="stat-icon sg">🏠</div></div><div><div class="stat-label">Active Listings</div><div class="stat-value">${active}</div></div></div>
+      <div class="stat-card"><div class="stat-top"><div class="stat-icon gd">📊</div></div><div><div class="stat-label">Avg Views/Listing</div><div class="stat-value">${props&&props.length?Math.round(totalViews/props.length):0}</div></div></div>`;
+  }
+
+  async function supabase_loadTenants() {
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) return;
+    const { data: msgs } = await sb.from('inquiries').select('tenant_name, tenant_phone, message, created_at, properties(title)').eq('landlord_id', session.user.id).order('created_at', { ascending: false });
+    const panel = document.getElementById('tenantsPanel');
+    if (!msgs || msgs.length === 0) {
+      panel.innerHTML = '<div class="panel-header"><div class="panel-title">All Tenants</div></div><div style="padding:3rem;text-align:center;color:var(--muted);">No tenant inquiries yet.</div>';
+      return;
+    }
+    const rows = msgs.map(m => `
+      <div style="display:flex;gap:1rem;align-items:center;padding:0.9rem 1.4rem;border-bottom:1px solid var(--border);">
+        <div style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--terracotta),var(--gold));display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;">👤</div>
+        <div style="flex:1;">
+          <div style="font-weight:600;font-size:0.85rem;">${m.tenant_name||'Anonymous'}</div>
+          <div style="font-size:0.72rem;color:var(--muted);">${m.tenant_phone||'No phone'} · Re: ${m.properties?.title||'Property'}</div>
+        </div>
+        <div style="font-size:0.72rem;color:var(--muted);">${timeSince(m.created_at)}</div>
+      </div>`).join('');
+    panel.innerHTML = `<div class="panel-header"><div class="panel-title">All Tenants (${msgs.length})</div></div>${rows}`;
+  }
+
+  async function supabase_loadProfile() {
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) return;
+    const { data: profile } = await sb.from('profiles').select('*').eq('id', session.user.id).single();
+    document.getElementById('profilePanel').innerHTML = `
+      <div style="padding:1.5rem;display:flex;flex-direction:column;gap:1rem;max-width:500px;">
+        <div style="display:flex;align-items:center;gap:1rem;margin-bottom:0.5rem;">
+          <div style="width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,var(--terracotta),var(--gold));display:flex;align-items:center;justify-content:center;font-size:1.6rem;">👤</div>
+          <div><div style="font-family:'Fraunces',serif;font-size:1.1rem;font-weight:700;">${profile?.full_name||session.user.user_metadata?.full_name||'Landlord'}</div><div style="font-size:0.72rem;color:var(--sage);font-weight:600;">✓ Verified Landlord</div></div>
+        </div>
+        <div><label style="font-size:0.68rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:0.3rem;">Full Name</label><input type="text" value="${profile?.full_name||''}" id="profileName" style="width:100%;border:1.5px solid var(--border);border-radius:10px;padding:0.65rem 0.9rem;font-family:'DM Sans',sans-serif;font-size:0.85rem;outline:none;" /></div>
+        <div><label style="font-size:0.68rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:0.3rem;">Email</label><input type="email" value="${session.user.email}" disabled style="width:100%;border:1.5px solid var(--border);border-radius:10px;padding:0.65rem 0.9rem;font-family:'DM Sans',sans-serif;font-size:0.85rem;background:#f5f0e8;color:var(--muted);outline:none;" /></div>
+        <div><label style="font-size:0.68rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:0.3rem;">Phone</label><input type="tel" value="${profile?.phone||''}" id="profilePhone" style="width:100%;border:1.5px solid var(--border);border-radius:10px;padding:0.65rem 0.9rem;font-family:'DM Sans',sans-serif;font-size:0.85rem;outline:none;" /></div>
+        <button onclick="saveProfile()" style="padding:0.8rem 2rem;background:var(--terracotta);color:white;border:none;border-radius:100px;font-family:'Fraunces',serif;font-size:0.95rem;font-weight:700;cursor:pointer;width:fit-content;">Save Profile</button>
+      </div>`;
+  }
+
+  async function saveProfile() {
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) return;
+    const name = document.getElementById('profileName')?.value;
+    const phone = document.getElementById('profilePhone')?.value;
+    await sb.from('profiles').update({ full_name: name, phone }).eq('id', session.user.id);
+    showToast('✅ Profile updated!');
+  }
+
+  async function deleteProperty(id) {
+    if (!confirm('Are you sure you want to delete this listing?')) return;
+    await sb.from('properties').delete().eq('id', id);
+    showToast('Listing deleted.');
+    supabase_loadPropertiesPage();
+  }
+
+  // modal
+  function openModal() {
+    document.getElementById('modalOverlay').classList.add('open');
+  }
+  function closeModal() {
+    document.getElementById('modalOverlay').classList.remove('open');
+  }
+  function closeModalOutside(e) {
+    if (e.target === document.getElementById('modalOverlay')) closeModal();
+  }
+  function submitProperty() {
+    closeModal();
+    showToast('✅ Property submitted for review!');
+  }
+
+  // toast
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 3000);
+  }
+
+  // bar hover tooltips
+  const bars = document.querySelectorAll('.bar');
+  const values = [142, 185, 120, 210, 198, 245, 184];
+  bars.forEach((bar, i) => {
+    bar.title = `${values[i]} views`;
+  });
+
+  // scroll reveal
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) { e.target.style.opacity='1'; e.target.style.transform='translateY(0)'; }
+    });
+  }, { threshold: 0.05 });
+
+  document.querySelectorAll('.stat-card, .qa-card, .panel, .analytics-row > *').forEach((el, i) => {
+    el.style.opacity = '0';
+    el.style.transform = 'translateY(14px)';
+    el.style.transition = `opacity 0.4s ${i*0.06}s ease, transform 0.4s ${i*0.06}s ease`;
+    obs.observe(el);
+  });
+</script>
+
+<!-- SUPABASE -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script>
+const SUPABASE_URL = 'https://rcnwtfdemyvjnwajndnn.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJjbnd0ZmRlbXl2am53YWpuZG5uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1MDY4ODYsImV4cCI6MjA4OTA4Mjg4Nn0.oqyaexTnqPl4moqYqshJcLlXPh_AbCJlE8m7YzL5U5Q';
+const { createClient } = supabase;
+const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+const statusClass = { active:'status-active', pending:'status-pending', paused:'status-paused' };
+const statusLabel = { active:'● Active', pending:'⏳ Pending Review', paused:'⏸ Paused' };
+const thumbColors = ['pt1','pt2','pt3','pt4'];
+const typeIcons = { single_room:'🏠', self_contained:'🏢', '1_bedroom':'🏠', '2_bedroom':'🏢', house:'🏡', student:'🎓' };
+
+// ── MOBILE SIDEBAR ──
+function toggleSidebar() {
+  const sidebar = document.getElementById('sidebar');
+  const overlay = document.getElementById('sidebarOverlay');
+  sidebar.classList.toggle('open');
+  overlay.classList.toggle('open');
+  document.body.style.overflow = sidebar.classList.contains('open') ? 'hidden' : '';
+}
+
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebarOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+// Close sidebar when a nav item is clicked on mobile
+document.querySelectorAll('.nav-item').forEach(item => {
+  item.addEventListener('click', () => {
+    if (window.innerWidth <= 960) closeSidebar();
+  });
+});
+
+async function resendConfirmation(email) {
+  await sb.auth.resend({ type: 'signup', email });
+  showToast('✅ Confirmation email resent! Check your inbox.');
+}
+
+async function initDashboard() {
+  // Auth guard
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) {
+    showToast('Please sign in to access your dashboard.');
+    setTimeout(() => { window.location.href = 'rentbridge-auth.html'; }, 1500);
+    return;
+  }
+
+  // Check if email is confirmed
+  if (!session.user.email_confirmed_at) {
+    document.querySelector('.topbar-title').textContent = 'Almost there!';
+    document.querySelector('.topbar-subtitle').textContent = 'Please confirm your email to continue.';
+    document.querySelector('.content').innerHTML = `
+      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;text-align:center;gap:1.2rem;padding:2rem;">
+        <div style="font-size:3.5rem">📬</div>
+        <div style="font-family:'Fraunces',serif;font-size:1.8rem;font-weight:900;letter-spacing:-0.03em">Check your inbox</div>
+        <div style="font-size:0.92rem;color:var(--muted);max-width:380px;line-height:1.7">
+          We sent a confirmation email to <strong style="color:var(--ink)">${session.user.email}</strong>.<br>
+          Click the link in that email to activate your account, then refresh this page.
+        </div>
+        <div style="font-size:0.78rem;color:var(--muted)">Can't find it? Check your spam/junk folder.</div>
+        <button onclick="resendConfirmation('${session.user.email}')" style="padding:0.7rem 1.8rem;background:var(--terracotta);color:white;border:none;border-radius:100px;font-family:'Fraunces',serif;font-size:0.95rem;font-weight:700;cursor:pointer;">Resend Confirmation Email</button>
+        <a href="rentbridge-auth.html" style="font-size:0.8rem;color:var(--terracotta);font-weight:600;">← Back to Sign In</a>
+      </div>`;
+    return;
+  }
+
+  const user = session.user;
+  const name = user.user_metadata?.full_name || 'Landlord';
+  const firstName = name.split(' ')[0];
+
+  // Update greeting
+  document.querySelector('.topbar-subtitle').textContent = `Good day, ${firstName} 👋`;
+  document.querySelector('.user-name').textContent = name;
+
+  // Load everything in parallel
+  await Promise.all([loadStats(user.id), loadProperties(user.id), loadMessages(user.id)]);
+}
+
+async function loadStats(userId) {
+  const [{ data: props }, { data: inquiries }, { count: unread }] = await Promise.all([
+    sb.from('properties').select('id, status, views').eq('landlord_id', userId),
+    sb.from('inquiries').select('id').eq('landlord_id', userId),
+    sb.from('inquiries').select('id', { count: 'exact', head: true }).eq('landlord_id', userId).eq('is_read', false),
+  ]);
+
+  const active = (props || []).filter(p => p.status === 'active').length;
+  const totalViews = (props || []).reduce((sum, p) => sum + (p.views || 0), 0);
+
+  const statVals = document.querySelectorAll('.stat-value');
+  if (statVals[0]) statVals[0].textContent = active;
+  if (statVals[1]) statVals[1].textContent = (inquiries || []).length;
+  if (statVals[2]) statVals[2].textContent = totalViews.toLocaleString();
+
+  // Update nav badge
+  if (unread > 0) {
+    const msgBadge = document.querySelector('.nav-item:nth-child(3) .nav-badge');
+    if (msgBadge) msgBadge.textContent = unread;
+  }
+}
+
+async function loadProperties(userId) {
+  const { data: props, error } = await supabase
+    .from('properties')
+    .select('*')
+    .eq('landlord_id', userId)
+    .order('created_at', { ascending: false })
+    .limit(5);
+
+  if (error || !props || props.length === 0) return;
+
+  // Update properties panel
+  const panel = document.querySelector('.panel:first-of-type');
+  const rows = panel.querySelectorAll('.property-row');
+  rows.forEach(r => r.remove());
+
+  props.forEach((p, i) => {
+    const row = document.createElement('div');
+    row.className = 'property-row';
+    row.onclick = () => window.location.href = `rentbridge-property.html?id=${p.id}`;
+    row.innerHTML = `
+      <div class="prop-thumb ${thumbColors[i % 4]}">${typeIcons[p.type] || '🏠'}</div>
+      <div class="prop-info">
+        <div class="prop-name">${p.title}</div>
+        <div class="prop-loc">📍 ${p.area ? p.area + ', ' : ''}${p.city}</div>
+        <div class="prop-meta">
+          <span class="status-pill ${statusClass[p.status] || 'status-pending'}">${statusLabel[p.status] || p.status}</span>
+          <span class="prop-views">👁 ${p.views || 0} views</span>
+        </div>
+      </div>
+      <div class="prop-right">
+        <div class="prop-price">₦${Number(p.price).toLocaleString()} <sub>/mo</sub></div>
+        <div class="prop-actions">
+          <button class="prop-btn" onclick="event.stopPropagation();editProperty('${p.id}')">Edit</button>
+          <button class="prop-btn ${p.status==='active'?'':'danger'}" onclick="event.stopPropagation();toggleStatus('${p.id}','${p.status}')">${p.status==='active'?'Pause':'Activate'}</button>
+        </div>
+      </div>`;
+    panel.appendChild(row);
+  });
+
+  // Update nav badge
+  const propBadge = document.querySelector('.nav-item:nth-child(2) .nav-badge');
+  if (propBadge) propBadge.textContent = props.length;
+}
+
+async function loadMessages(userId) {
+  const { data: msgs, error } = await supabase
+    .from('inquiries')
+    .select('*, properties(title)')
+    .eq('landlord_id', userId)
+    .order('created_at', { ascending: false })
+    .limit(5);
+
+  if (error || !msgs || msgs.length === 0) return;
+
+  const msgPanel = document.querySelector('.panel:nth-of-type(2) .msg-list');
+  if (!msgPanel) return;
+
+  msgPanel.innerHTML = msgs.map(m => {
+    const timeAgo = timeSince(m.created_at);
+    return `
+    <div class="msg-item ${!m.is_read ? 'unread' : ''}" onclick="markRead('${m.id}');this.classList.remove('unread')">
+      ${!m.is_read ? '<div class="msg-unread-dot"></div>' : ''}
+      <div class="msg-avatar">👤</div>
+      <div class="msg-body">
+        <div class="msg-name">${m.tenant_name || 'Anonymous Tenant'}</div>
+        <div class="msg-preview">${m.message}</div>
+        <div style="font-size:0.65rem;color:var(--muted);margin-top:0.2rem">Re: ${m.properties?.title || 'Property'}</div>
+      </div>
+      <div class="msg-time">${timeAgo}</div>
+    </div>`;
+  }).join('');
+}
+
+async function toggleStatus(id, current) {
+  const newStatus = current === 'active' ? 'paused' : 'active';
+  await sb.from('properties').update({ status: newStatus }).eq('id', id);
+  showToast(`Listing ${newStatus === 'active' ? 'activated ✓' : 'paused'}`);
+  const { data: { session } } = await sb.auth.getSession();
+  if (session) loadProperties(session.user.id);
+}
+
+async function markRead(id) {
+  await sb.from('inquiries').update({ is_read: true }).eq('id', id);
+}
+
+function editProperty(id) {
+  showToast('Opening editor…');
+  // Could open modal pre-filled with property data
+}
+
+// Override add property modal submit
+async function submitProperty() {
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) { showToast('Please log in first.'); return; }
+
+  const title = document.querySelector('.modal-body input[type="text"]')?.value?.trim();
+  const type = document.querySelectorAll('.modal-body select')[0]?.value;
+  const city = document.querySelectorAll('.modal-body select')[1]?.value;
+  const area = document.querySelectorAll('.modal-body input[type="text"]')[1]?.value?.trim();
+  const price = document.querySelectorAll('.modal-body input[type="number"]')[0]?.value;
+  const caution = document.querySelectorAll('.modal-body input[type="number"]')[1]?.value;
+  const desc = document.querySelector('.modal-body textarea')?.value?.trim();
+  const bedrooms = parseInt(document.querySelectorAll('.modal-body select')[2]?.value) || 1;
+  const bathrooms = parseInt(document.querySelectorAll('.modal-body select')[3]?.value) || 1;
+
+  if (!title || !price || !city) { showToast('Please fill in title, city and price.'); return; }
+
+  const typeMap = { 'Single Room':'single_room','Self-Contained':'self_contained','1-Bedroom Flat':'1_bedroom','2-Bedroom Flat':'2_bedroom','Full House':'house','Student Housing':'student' };
+
+  const { error } = await sb.from('properties').insert({
+    landlord_id: session.user.id,
+    title, city, area,
+    type: typeMap[type] || 'self_contained',
+    price: parseInt(price),
+    caution_deposit: parseInt(caution) || 0,
+    description: desc,
+    bedrooms, bathrooms,
+    status: 'pending'
+  });
+
+  closeModal();
+  if (error) { showToast('❌ Error: ' + error.message); return; }
+  showToast('✅ Property submitted for review!');
+  loadProperties(session.user.id);
+}
+
+// Logout
+async function handleLogout() {
+  showToast('Logging out…');
+  await sb.auth.signOut();
+  setTimeout(() => { window.location.href = 'rentbridge-auth.html'; }, 800);
+}
+
+function timeSince(dateStr) {
+  const seconds = Math.floor((new Date() - new Date(dateStr)) / 1000);
+  if (seconds < 60) return 'Just now';
+  if (seconds < 3600) return Math.floor(seconds/60) + 'm ago';
+  if (seconds < 86400) return Math.floor(seconds/3600) + 'h ago';
+  return Math.floor(seconds/86400) + 'd ago';
+}
+
+initDashboard();
+</script>
+</body>
+</html>
