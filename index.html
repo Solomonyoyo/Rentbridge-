@@ -1053,7 +1053,7 @@
             </select>
           </div>
         </div>
-        <button class="search-btn" onclick="alert('Search feature — connect to your backend!')">Search Available Properties →</button>
+        <button class="search-btn" onclick="doTenantSearch()">Search Available Properties →</button>
       </div>
 
       <div id="landlord-tab" class="tab-content">
@@ -1086,7 +1086,7 @@
             <input type="tel" placeholder="+234 XXX XXXX XXX" />
           </div>
         </div>
-        <button class="search-btn" onclick="alert('Landlord listing — connect to your backend!')">List My Property for Free →</button>
+        <button class="search-btn" onclick="window.location.href='rentbridge-auth.html'">List My Property for Free →</button>
       </div>
     </div>
 
@@ -1581,6 +1581,17 @@
     document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
     btn.classList.add('active');
     document.getElementById(tab + '-tab').classList.add('active');
+  }
+
+  function doTenantSearch() {
+    const city = document.querySelector('#tenant-tab select:nth-of-type(1)')?.value || '';
+    const type = document.querySelector('#tenant-tab select:nth-of-type(2)')?.value || '';
+    const budget = document.querySelector('#tenant-tab select:nth-of-type(3)')?.value || '';
+    const params = new URLSearchParams();
+    if (city) params.set('city', city);
+    if (type && type !== 'Any Type') params.set('type', type);
+    if (budget && budget !== 'Any Budget') params.set('budget', budget);
+    window.location.href = 'rentbridge-search.html?' + params.toString();
   }
 
   // Filter chips

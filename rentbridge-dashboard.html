@@ -1251,5 +1251,199 @@ body {
     obs.observe(el);
   });
 </script>
+
+<!-- SUPABASE -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL = 'https://rcnwtfdemyvjnwajndnn.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJjbnd0ZmRlbXl2am53YWpuZG5uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1MDY4ODYsImV4cCI6MjA4OTA4Mjg4Nn0.oqyaexTnqPl4moqYqshJcLlXPh_AbCJlE8m7YzL5U5Q';
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+const statusClass = { active:'status-active', pending:'status-pending', paused:'status-paused' };
+const statusLabel = { active:'● Active', pending:'⏳ Pending Review', paused:'⏸ Paused' };
+const thumbColors = ['pt1','pt2','pt3','pt4'];
+const typeIcons = { single_room:'🏠', self_contained:'🏢', '1_bedroom':'🏠', '2_bedroom':'🏢', house:'🏡', student:'🎓' };
+
+async function initDashboard() {
+  // Auth guard
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) { window.location.href = 'rentbridge-auth.html'; return; }
+
+  const user = session.user;
+  const name = user.user_metadata?.full_name || 'Landlord';
+  const firstName = name.split(' ')[0];
+
+  // Update greeting
+  document.querySelector('.topbar-subtitle').textContent = `Good day, ${firstName} 👋`;
+  document.querySelector('.user-name').textContent = name;
+
+  // Load everything in parallel
+  await Promise.all([loadStats(user.id), loadProperties(user.id), loadMessages(user.id)]);
+}
+
+async function loadStats(userId) {
+  const [{ data: props }, { data: inquiries }, { count: unread }] = await Promise.all([
+    supabase.from('properties').select('id, status, views').eq('landlord_id', userId),
+    supabase.from('inquiries').select('id').eq('landlord_id', userId),
+    supabase.from('inquiries').select('id', { count: 'exact', head: true }).eq('landlord_id', userId).eq('is_read', false),
+  ]);
+
+  const active = (props || []).filter(p => p.status === 'active').length;
+  const totalViews = (props || []).reduce((sum, p) => sum + (p.views || 0), 0);
+
+  const statVals = document.querySelectorAll('.stat-value');
+  if (statVals[0]) statVals[0].textContent = active;
+  if (statVals[1]) statVals[1].textContent = (inquiries || []).length;
+  if (statVals[2]) statVals[2].textContent = totalViews.toLocaleString();
+
+  // Update nav badge
+  if (unread > 0) {
+    const msgBadge = document.querySelector('.nav-item:nth-child(3) .nav-badge');
+    if (msgBadge) msgBadge.textContent = unread;
+  }
+}
+
+async function loadProperties(userId) {
+  const { data: props, error } = await supabase
+    .from('properties')
+    .select('*')
+    .eq('landlord_id', userId)
+    .order('created_at', { ascending: false })
+    .limit(5);
+
+  if (error || !props || props.length === 0) return;
+
+  // Update properties panel
+  const panel = document.querySelector('.panel:first-of-type');
+  const rows = panel.querySelectorAll('.property-row');
+  rows.forEach(r => r.remove());
+
+  props.forEach((p, i) => {
+    const row = document.createElement('div');
+    row.className = 'property-row';
+    row.onclick = () => window.location.href = `rentbridge-property.html?id=${p.id}`;
+    row.innerHTML = `
+      <div class="prop-thumb ${thumbColors[i % 4]}">${typeIcons[p.type] || '🏠'}</div>
+      <div class="prop-info">
+        <div class="prop-name">${p.title}</div>
+        <div class="prop-loc">📍 ${p.area ? p.area + ', ' : ''}${p.city}</div>
+        <div class="prop-meta">
+          <span class="status-pill ${statusClass[p.status] || 'status-pending'}">${statusLabel[p.status] || p.status}</span>
+          <span class="prop-views">👁 ${p.views || 0} views</span>
+        </div>
+      </div>
+      <div class="prop-right">
+        <div class="prop-price">₦${Number(p.price).toLocaleString()} <sub>/mo</sub></div>
+        <div class="prop-actions">
+          <button class="prop-btn" onclick="event.stopPropagation();editProperty('${p.id}')">Edit</button>
+          <button class="prop-btn ${p.status==='active'?'':'danger'}" onclick="event.stopPropagation();toggleStatus('${p.id}','${p.status}')">${p.status==='active'?'Pause':'Activate'}</button>
+        </div>
+      </div>`;
+    panel.appendChild(row);
+  });
+
+  // Update nav badge
+  const propBadge = document.querySelector('.nav-item:nth-child(2) .nav-badge');
+  if (propBadge) propBadge.textContent = props.length;
+}
+
+async function loadMessages(userId) {
+  const { data: msgs, error } = await supabase
+    .from('inquiries')
+    .select('*, properties(title)')
+    .eq('landlord_id', userId)
+    .order('created_at', { ascending: false })
+    .limit(5);
+
+  if (error || !msgs || msgs.length === 0) return;
+
+  const msgPanel = document.querySelector('.panel:nth-of-type(2) .msg-list');
+  if (!msgPanel) return;
+
+  msgPanel.innerHTML = msgs.map(m => {
+    const timeAgo = timeSince(m.created_at);
+    return `
+    <div class="msg-item ${!m.is_read ? 'unread' : ''}" onclick="markRead('${m.id}');this.classList.remove('unread')">
+      ${!m.is_read ? '<div class="msg-unread-dot"></div>' : ''}
+      <div class="msg-avatar">👤</div>
+      <div class="msg-body">
+        <div class="msg-name">${m.tenant_name || 'Anonymous Tenant'}</div>
+        <div class="msg-preview">${m.message}</div>
+        <div style="font-size:0.65rem;color:var(--muted);margin-top:0.2rem">Re: ${m.properties?.title || 'Property'}</div>
+      </div>
+      <div class="msg-time">${timeAgo}</div>
+    </div>`;
+  }).join('');
+}
+
+async function toggleStatus(id, current) {
+  const newStatus = current === 'active' ? 'paused' : 'active';
+  await supabase.from('properties').update({ status: newStatus }).eq('id', id);
+  showToast(`Listing ${newStatus === 'active' ? 'activated ✓' : 'paused'}`);
+  const { data: { session } } = await supabase.auth.getSession();
+  if (session) loadProperties(session.user.id);
+}
+
+async function markRead(id) {
+  await supabase.from('inquiries').update({ is_read: true }).eq('id', id);
+}
+
+function editProperty(id) {
+  showToast('Opening editor…');
+  // Could open modal pre-filled with property data
+}
+
+// Override add property modal submit
+async function submitProperty() {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) { showToast('Please log in first.'); return; }
+
+  const title = document.querySelector('.modal-body input[type="text"]')?.value?.trim();
+  const type = document.querySelectorAll('.modal-body select')[0]?.value;
+  const city = document.querySelectorAll('.modal-body select')[1]?.value;
+  const area = document.querySelectorAll('.modal-body input[type="text"]')[1]?.value?.trim();
+  const price = document.querySelectorAll('.modal-body input[type="number"]')[0]?.value;
+  const caution = document.querySelectorAll('.modal-body input[type="number"]')[1]?.value;
+  const desc = document.querySelector('.modal-body textarea')?.value?.trim();
+  const bedrooms = parseInt(document.querySelectorAll('.modal-body select')[2]?.value) || 1;
+  const bathrooms = parseInt(document.querySelectorAll('.modal-body select')[3]?.value) || 1;
+
+  if (!title || !price || !city) { showToast('Please fill in title, city and price.'); return; }
+
+  const typeMap = { 'Single Room':'single_room','Self-Contained':'self_contained','1-Bedroom Flat':'1_bedroom','2-Bedroom Flat':'2_bedroom','Full House':'house','Student Housing':'student' };
+
+  const { error } = await supabase.from('properties').insert({
+    landlord_id: session.user.id,
+    title, city, area,
+    type: typeMap[type] || 'self_contained',
+    price: parseInt(price),
+    caution_deposit: parseInt(caution) || 0,
+    description: desc,
+    bedrooms, bathrooms,
+    status: 'pending'
+  });
+
+  closeModal();
+  if (error) { showToast('❌ Error: ' + error.message); return; }
+  showToast('✅ Property submitted for review!');
+  loadProperties(session.user.id);
+}
+
+// Logout
+document.querySelector('.sidebar-bottom .nav-item').addEventListener('click', async () => {
+  await supabase.auth.signOut();
+  window.location.href = 'rentbridge-auth.html';
+});
+
+function timeSince(dateStr) {
+  const seconds = Math.floor((new Date() - new Date(dateStr)) / 1000);
+  if (seconds < 60) return 'Just now';
+  if (seconds < 3600) return Math.floor(seconds/60) + 'm ago';
+  if (seconds < 86400) return Math.floor(seconds/3600) + 'h ago';
+  return Math.floor(seconds/86400) + 'd ago';
+}
+
+initDashboard();
+</script>
 </body>
 </html>

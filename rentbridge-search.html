@@ -1290,5 +1290,95 @@
     observer.observe(el);
   });
 </script>
+
+<!-- SUPABASE -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL = 'https://rcnwtfdemyvjnwajndnn.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJjbnd0ZmRlbXl2am53YWpuZG5uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1MDY4ODYsImV4cCI6MjA4OTA4Mjg4Nn0.oqyaexTnqPl4moqYqshJcLlXPh_AbCJlE8m7YzL5U5Q';
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+const typeIcons = { single_room:'🏠', self_contained:'🏢', '1_bedroom':'🏠', '2_bedroom':'🏢', house:'🏡', student:'🎓' };
+const typeLabels = { single_room:'Single Room', self_contained:'Self-Contained', '1_bedroom':'1-Bedroom', '2_bedroom':'2-Bedroom', house:'Full House', student:'Student Housing' };
+const bgColors = ['l1','l2','l3','l4','l5','l6','l7','l8','l9'];
+
+async function loadListings() {
+  const grid = document.getElementById('resultsGrid');
+
+  // Show skeleton
+  grid.style.opacity = '0.3';
+
+  let query = supabase
+    .from('properties')
+    .select('*, profiles(full_name, is_verified)')
+    .eq('status', 'active')
+    .order('created_at', { ascending: false })
+    .limit(9);
+
+  // Apply city filter from URL params
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('city')) query = query.ilike('city', params.get('city'));
+  if (params.get('type')) query = query.eq('type', params.get('type'));
+  if (params.get('max')) query = query.lte('price', parseInt(params.get('max')));
+
+  const { data: listings, error } = await query;
+
+  grid.style.opacity = '1';
+
+  if (error || !listings || listings.length === 0) {
+    // Keep demo cards if no real listings yet
+    return;
+  }
+
+  // Replace grid with real data
+  grid.innerHTML = listings.map((p, i) => `
+    <div class="listing-card" onclick="window.location.href='rentbridge-property.html?id=${p.id}'">
+      <div class="listing-img ${bgColors[i % bgColors.length]}">
+        ${typeIcons[p.type] || '🏠'}
+        <div class="listing-tag">${typeLabels[p.type] || p.type}</div>
+        ${p.is_verified || p.profiles?.is_verified ? '<div class="listing-verified">✓ Verified</div>' : ''}
+        <button class="listing-save" onclick="event.stopPropagation();toggleSave(this)">♡</button>
+      </div>
+      <div class="listing-body">
+        <div class="listing-title">${p.title}</div>
+        <div class="listing-loc">📍 ${p.area ? p.area + ', ' : ''}${p.city}</div>
+        <div class="listing-amenities">
+          ${(p.amenities || []).slice(0,3).map(a => `<span class="listing-amenity">${a}</span>`).join('')}
+        </div>
+        <div class="listing-footer">
+          <div class="listing-price">₦${Number(p.price).toLocaleString()} <sub>/month</sub></div>
+          <button class="listing-contact" onclick="event.stopPropagation();window.location.href='rentbridge-property.html?id=${p.id}'">Contact</button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+
+  // Update count
+  document.querySelector('.results-count').innerHTML = `<em>${listings.length} properties</em> found`;
+
+  // Animate cards
+  document.querySelectorAll('.listing-card').forEach((el, i) => {
+    el.style.opacity = '0';
+    el.style.transform = 'translateY(16px)';
+    el.style.transition = `opacity 0.4s ${i * 0.05}s ease, transform 0.4s ${i * 0.05}s ease`;
+    setTimeout(() => { el.style.opacity='1'; el.style.transform='translateY(0)'; }, i * 50);
+  });
+}
+
+// Override search button
+function triggerSearch() {
+  showSkeleton();
+  const city = document.querySelector('.nav-search select')?.value;
+  const keyword = document.querySelector('.nav-search input')?.value;
+  const params = new URLSearchParams();
+  if (city) params.set('city', city);
+  if (keyword) params.set('q', keyword);
+  window.history.replaceState({}, '', '?' + params.toString());
+  setTimeout(() => { loadListings(); hideSkeleton(); }, 600);
+}
+
+// Load on page ready
+loadListings();
+</script>
 </body>
 </html>

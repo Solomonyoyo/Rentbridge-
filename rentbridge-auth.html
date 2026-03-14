@@ -917,7 +917,22 @@ body {
 <!-- TOAST -->
 <div id="toast" style="position:fixed;bottom:2rem;left:50%;transform:translateX(-50%) translateY(20px);background:var(--ink);color:white;padding:0.7rem 1.6rem;border-radius:100px;font-size:0.82rem;font-weight:500;opacity:0;transition:all 0.3s;pointer-events:none;z-index:600;white-space:nowrap;"></div>
 
+<!-- SUPABASE -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
+// ── SUPABASE INIT ──
+const SUPABASE_URL = 'https://rcnwtfdemyvjnwajndnn.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJjbnd0ZmRlbXl2am53YWpuZG5uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1MDY4ODYsImV4cCI6MjA4OTA4Mjg4Nn0.oqyaexTnqPl4moqYqshJcLlXPh_AbCJlE8m7YzL5U5Q';
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// Redirect if already logged in
+supabase.auth.getSession().then(({ data: { session } }) => {
+  if (session) {
+    const role = session.user.user_metadata?.role;
+    window.location.href = role === 'landlord' ? 'rentbridge-dashboard.html' : 'rentbridge-search.html';
+  }
+});
+
 let currentRole = 'tenant';
 
 // ── TAB SWITCHING ──
@@ -1002,7 +1017,7 @@ function clearError(id) {
 }
 
 // ── VALIDATE LOGIN ──
-function handleLogin() {
+async function handleLogin() {
   const email = document.getElementById('loginEmail').value.trim();
   const pass = document.getElementById('loginPass').value;
   let valid = true;
@@ -1017,24 +1032,34 @@ function handleLogin() {
     document.getElementById('loginPass').classList.add('error');
     valid = false;
   }
-
   if (!valid) return;
 
   const btn = document.getElementById('loginBtn');
   btn.textContent = 'Signing in…';
   btn.classList.add('loading');
 
-  setTimeout(() => {
-    btn.textContent = 'Sign In to RentBridge';
-    btn.classList.remove('loading');
-    showSuccess(false);
-  }, 1400);
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password: pass });
+
+  btn.textContent = 'Sign In to RentBridge';
+  btn.classList.remove('loading');
+
+  if (error) {
+    showToast('❌ Wrong email or password. Please try again.');
+    document.getElementById('loginEmailErr').classList.add('show');
+    return;
+  }
+
+  currentRole = data.user.user_metadata?.role || 'tenant';
+  showSuccess(false);
 }
 
 // ── VALIDATE SIGNUP ──
-function handleSignup() {
+async function handleSignup() {
   const email = document.getElementById('signupEmail').value.trim();
   const phone = document.getElementById('signupPhone').value.trim();
+  const firstName = document.getElementById('firstName').value.trim();
+  const lastName = document.getElementById('lastName').value.trim();
+  const pass = document.getElementById('signupPass').value;
   let valid = true;
 
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
@@ -1047,15 +1072,28 @@ function handleSignup() {
   btn.textContent = 'Creating account…';
   btn.classList.add('loading');
 
-  setTimeout(() => {
-    btn.textContent = 'Create My Account →';
-    btn.classList.remove('loading');
-    // show OTP
-    document.getElementById('otpPhoneDisplay').textContent = '+234 ' + (phone || '0801 234 5678');
-    hide('signupForm'); show('otpScreen');
-    document.getElementById('otpScreen').style.animation = 'slideLeft 0.3s ease both';
-    document.getElementById('otp0').focus();
-  }, 1200);
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password: pass,
+    options: {
+      data: {
+        full_name: firstName + ' ' + lastName,
+        phone: '+234' + phone.replace(/\D/g,''),
+        role: currentRole
+      }
+    }
+  });
+
+  btn.textContent = 'Create My Account →';
+  btn.classList.remove('loading');
+
+  if (error) {
+    showToast('❌ ' + error.message);
+    return;
+  }
+
+  showToast('✅ Account created! Check your email to confirm.');
+  showSuccess(true);
 }
 
 // ── OTP INPUT ──
@@ -1064,23 +1102,29 @@ function otpNext(input, idx) {
   if (input.value.length === 1 && idx < 5) {
     document.getElementById('otp' + (idx + 1)).focus();
   }
-  // auto verify if all filled
   const all = Array.from({length:6}, (_,i) => document.getElementById('otp'+i).value).join('');
   if (all.length === 6) setTimeout(() => verifyOTP(), 300);
 }
 
-function verifyOTP() {
-  showSuccess(true);
-}
+function verifyOTP() { showSuccess(true); }
 
 // ── FORGOT PASSWORD ──
-function handleForgot() {
+async function handleForgot() {
+  const emailInput = document.querySelector('#forgotScreen input[type="email"]');
+  const email = emailInput ? emailInput.value.trim() : '';
+  if (!email) { showToast('Please enter your email address.'); return; }
+
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: 'https://rentbridge.vercel.app/rentbridge-auth.html'
+  });
+
   hide('forgotScreen');
-  hide('loginForm');
   const el = document.getElementById('successTitle');
   const sub = document.getElementById('successSub');
   el.textContent = 'Check your email 📬';
-  sub.textContent = 'We\'ve sent a password reset link. Check your inbox and spam folder.';
+  sub.textContent = error
+    ? 'Something went wrong. Please try again.'
+    : "We've sent a reset link to " + email + ". Check your inbox.";
   const btn = document.querySelector('.success-btn');
   btn.textContent = 'Back to Sign In';
   btn.onclick = showLogin;

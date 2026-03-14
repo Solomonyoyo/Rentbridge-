@@ -963,5 +963,103 @@
     obs.observe(el);
   });
 </script>
+
+<!-- SUPABASE -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL = 'https://rcnwtfdemyvjnwajndnn.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJjbnd0ZmRlbXl2am53YWpuZG5uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1MDY4ODYsImV4cCI6MjA4OTA4Mjg4Nn0.oqyaexTnqPl4moqYqshJcLlXPh_AbCJlE8m7YzL5U5Q';
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+const typeLabels = { single_room:'Single Room', self_contained:'Self-Contained', '1_bedroom':'1-Bedroom Flat', '2_bedroom':'2-Bedroom Flat', house:'Full House', student:'Student Housing' };
+
+async function loadProperty() {
+  const params = new URLSearchParams(window.location.search);
+  const id = params.get('id');
+  if (!id) return; // no id = show demo content
+
+  const { data: p, error } = await supabase
+    .from('properties')
+    .select('*, profiles(full_name, is_verified, phone, created_at)')
+    .eq('id', id)
+    .single();
+
+  if (error || !p) return;
+
+  // Update page title & meta
+  document.title = p.title + ' — RentBridge';
+  document.querySelector('.property-title').innerHTML = p.title;
+  document.querySelector('.property-loc').innerHTML = `📍 ${p.area ? p.area + ', ' : ''}${p.city} · <a href="#map" style="color:var(--terracotta);text-decoration:none;font-weight:500;">View on map</a>`;
+  document.querySelector('.property-tag').textContent = typeLabels[p.type] || p.type;
+  document.querySelector('.price-main').innerHTML = `₦${Number(p.price).toLocaleString()} <sub>/month</sub>`;
+  document.querySelector('.mobile-price').innerHTML = `₦${Number(p.price).toLocaleString()} <sub>/mo</sub>`;
+
+  // Stats
+  const statVals = document.querySelectorAll('.property-stat-val');
+  if (statVals[0]) statVals[0].textContent = p.bedrooms || '–';
+  if (statVals[1]) statVals[1].textContent = p.bathrooms || '–';
+
+  // Description
+  if (p.description) {
+    document.getElementById('descText').childNodes[0].textContent = p.description;
+  }
+
+  // Amenities
+  if (p.amenities && p.amenities.length) {
+    const grid = document.querySelector('.amenities-grid');
+    grid.innerHTML = p.amenities.map(a => `<div class="amenity-item"><div class="amenity-icon">${a.split(' ')[0]}</div>${a.split(' ').slice(1).join(' ')}</div>`).join('');
+  }
+
+  // Landlord info
+  if (p.profiles) {
+    document.querySelector('.landlord-name').textContent = p.profiles.full_name || 'Property Owner';
+    if (p.profiles.is_verified) document.querySelector('.landlord-badge').innerHTML = '✓ Verified Landlord';
+    const since = p.profiles.created_at ? new Date(p.profiles.created_at).getFullYear() : '–';
+    document.querySelector('.landlord-since').textContent = `Member since ${since}`;
+  }
+
+  // Breadcrumb
+  document.querySelector('.breadcrumb').innerHTML = `
+    <a href="index.html">Home</a><span>›</span>
+    <a href="rentbridge-search.html?city=${p.city}">${p.city}</a><span>›</span>
+    <span style="color:var(--ink);font-weight:500;">${p.title}</span>`;
+
+  // Increment view count
+  await supabase.from('properties').update({ views: (p.views || 0) + 1 }).eq('id', id);
+}
+
+// Send real inquiry
+async function submitContact() {
+  const params = new URLSearchParams(window.location.search);
+  const propertyId = params.get('id');
+
+  const name = document.querySelector('.contact-form input[type="text"]')?.value?.trim();
+  const phone = document.querySelector('.contact-form input[type="tel"]')?.value?.trim();
+  const message = document.getElementById('msgArea')?.value?.trim();
+
+  if (!name || !message) { showToast('Please fill in your name and message.'); return; }
+
+  // Get landlord_id from current property
+  if (propertyId) {
+    const { data: prop } = await supabase.from('properties').select('landlord_id').eq('id', propertyId).single();
+
+    const { data: session } = await supabase.auth.getSession();
+    const tenantId = session?.session?.user?.id || null;
+
+    await supabase.from('inquiries').insert({
+      property_id: propertyId,
+      landlord_id: prop?.landlord_id,
+      tenant_id: tenantId,
+      tenant_name: name,
+      tenant_phone: phone,
+      message,
+    });
+  }
+
+  showToast('✅ Message sent! The landlord will reply shortly.');
+}
+
+loadProperty();
+</script>
 </body>
 </html>
